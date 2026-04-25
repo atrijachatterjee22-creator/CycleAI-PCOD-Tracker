@@ -78,7 +78,7 @@ User Input → Validation → ML Engine → Risk Score → Insight Generation �
 
 ## 🚀 Live Demo
 
-🔗 **[Click here to try the interactive prototype](YOUR_NETLIFY_LINK_HERE)**
+🔗 **[Click here to try the interactive prototype](tangerine-marzipan-07b2d9.netlify.app)**
 
 ---
 
@@ -101,8 +101,8 @@ CycleAI/
 
 | Name | Role |
 |------|------|
-| [Your Name] | Frontend & UI/UX Design |
-| Aishwariya | ML & Backend Development |
+| Atrija Chtterjee | Frontend & UI/UX Design |
+| Aishwariya dhage | ML & Backend Development |
 
 > First year students · Passionate about women's health technology
 
