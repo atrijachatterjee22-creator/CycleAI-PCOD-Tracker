@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CycleAI — Smart Period Tracking & PCOD Risk Prediction</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --purple:#7c3aed;--deep:#2d1b69;--pink:#ec4899;--gold:#f59e0b;
+  --teal:#0ea5e9;--green:#10b981;--lavender:#a78bfa;--white:#fff;
+  --offwhite:#f5f3ff;--gray:#f3f4f6;--text:#1a1a2e;--muted:#6b7280;
+}
+body{background:#1a0a3a;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+h1.site-title{color:#fff;font-size:13px;letter-spacing:2px;margin-bottom:6px;opacity:.6;text-transform:uppercase}
+.tagline{color:var(--lavender);font-size:12px;margin-bottom:18px;text-align:center}
+.device{width:340px;height:680px;border-radius:40px;border:8px solid #0d0d1f;background:#fff;overflow:hidden;position:relative;box-shadow:0 30px 80px rgba(124,58,237,.4),0 0 0 1px #3a1a7a}
+.notch{width:110px;height:22px;background:#0d0d1f;border-radius:0 0 16px 16px;position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:99}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden}
+.screen.active{display:flex}
+
+/* NAV */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:28px 18px 8px;flex-shrink:0}
+.nav-back{color:var(--purple);font-size:13px;cursor:pointer;padding:4px;min-width:44px}
+.nav-title{font-size:15px;font-weight:600;color:var(--text)}
+.nav-right{min-width:44px;text-align:right}
+
+/* SCROLL CONTENT */
+.content{flex:1;overflow-y:auto;padding:0 18px 20px;-webkit-overflow-scrolling:touch}
+.content::-webkit-scrollbar{display:none}
+
+/* BUTTONS */
+.btn{width:100%;padding:14px;border:none;border-radius:16px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px;transition:opacity .15s}
+.btn:active{opacity:.8}
+.btn-primary{background:var(--purple);color:#fff}
+.btn-outline{background:transparent;color:var(--purple);border:2px solid var(--purple)}
+.btn-pink{background:var(--pink);color:#fff}
+
+/* INPUTS */
+.label{font-size:12px;color:var(--muted);margin-bottom:5px;display:block;font-weight:500}
+.field{width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;color:var(--text);background:#fafafa;margin-bottom:14px}
+.field:focus{outline:none;border-color:var(--purple)}
+
+/* CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.chip{padding:7px 14px;border-radius:20px;border:1.5px solid #e5e7eb;font-size:12px;cursor:pointer;color:var(--muted);background:#fafafa;transition:all .15s;user-select:none}
+.chip.sel,.chip:hover{background:var(--purple);color:#fff;border-color:var(--purple)}
+
+/* CARDS */
+.card{background:#fff;border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 2px 12px rgba(124,58,237,.1)}
+.card-accent{border-left:4px solid var(--purple)}
+
+/* SECTION TITLE */
+.sec{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px}
+
+/* TAB BAR */
+.tabs{display:flex;border-top:1px solid #f0f0f0;flex-shrink:0;background:#fff}
+.tab{flex:1;padding:10px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:#bbb;font-size:10px;transition:color .15s}
+.tab.on{color:var(--purple)}
+.tab svg{width:20px;height:20px;fill:currentColor}
+
+/* ═══════════════════════════════
+   SCREEN 1 — SPLASH
+═══════════════════════════════ */
+#s1{background:linear-gradient(160deg,#3b0764 0%,#6d28d9 55%,#ec4899 100%);justify-content:space-between;padding:50px 28px 44px}
+.logo-wrap{text-align:center;margin-top:20px}
+.logo-icon{width:76px;height:76px;background:rgba(255,255,255,.18);border-radius:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
+.logo-icon svg{width:44px;height:44px;fill:#fff}
+.app-name{color:#fff;font-size:28px;font-weight:700;margin-bottom:6px}
+.app-sub{color:rgba(255,255,255,.75);font-size:14px;line-height:1.6}
+.splash-badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:5px 14px;font-size:11px;color:rgba(255,255,255,.9);margin-bottom:30px}
+
+/* ═══════════════════════════════
+   SCREEN 2 — LOG
+═══════════════════════════════ */
+#s2{background:#fff}
+.progress{display:flex;gap:6px;justify-content:center;padding:8px 0 16px}
+.pdot{width:8px;height:8px;border-radius:4px;background:#e5e7eb;transition:all .3s}
+.pdot.on{width:24px;background:var(--purple)}
+
+/* ═══════════════════════════════
+   SCREEN 3 — DASHBOARD
+═══════════════════════════════ */
+#s3{background:#f5f3ff}
+.dash-header{background:linear-gradient(135deg,#5b21b6,#7c3aed);padding:28px 18px 20px;flex-shrink:0}
+.dash-header .greeting{color:rgba(255,255,255,.8);font-size:12px;margin-bottom:2px}
+.dash-header .name{color:#fff;font-size:19px;font-weight:700}
+.next-card{background:rgba(255,255,255,.18);border-radius:14px;padding:13px 16px;margin-top:14px;display:flex;justify-content:space-between;align-items:center}
+.next-label{color:rgba(255,255,255,.8);font-size:11px;margin-bottom:2px}
+.next-days{color:#fff;font-size:26px;font-weight:700;line-height:1}
+.next-date{color:rgba(255,255,255,.7);font-size:11px;margin-top:2px}
+.next-btn{background:rgba(255,255,255,.25);color:#fff;border:none;padding:8px 14px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer}
+.stat-row{display:flex;gap:10px;margin-bottom:14px}
+.stat{flex:1;background:#fff;border-radius:14px;padding:12px 8px;text-align:center;box-shadow:0 2px 8px rgba(124,58,237,.08);cursor:pointer}
+.stat-num{font-size:22px;font-weight:700;color:var(--purple)}
+.stat-lbl{font-size:10px;color:var(--muted);margin-top:2px}
+
+/* CALENDAR */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:10px}
+.cd{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:11px;color:#374151}
+.cd.hdr{font-size:10px;color:#9ca3af;font-weight:600}
+.cd.period{background:var(--pink);color:#fff;font-weight:600}
+.cd.predicted{background:#ddd6fe;color:#5b21b6;font-weight:500}
+.cd.today{outline:2px solid var(--purple);color:var(--purple);font-weight:600}
+.legend{display:flex;gap:12px;margin-bottom:14px}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.ldot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ═══════════════════════════════
+   SCREEN 4 — INSIGHTS
+═══════════════════════════════ */
+#s4{background:#fff}
+.chart-wrap{width:100%;height:100px;margin:8px 0 14px;position:relative}
+.chart-wrap svg{width:100%;height:100%}
+
+/* ═══════════════════════════════
+   SCREEN 5 — PCOD RISK
+═══════════════════════════════ */
+#s5{background:#fff}
+.risk-wrap{display:flex;flex-direction:column;align-items:center;padding:10px 0 4px}
+.risk-ring{width:130px;height:130px;position:relative;margin-bottom:6px}
+.risk-ring svg{width:100%;height:100%}
+.risk-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.risk-pct{font-size:28px;font-weight:700;color:var(--gold)}
+.risk-word{font-size:12px;color:var(--muted)}
+.risk-note{font-size:11px;color:var(--muted);text-align:center;margin-bottom:14px}
+.alert{border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.alert.med{background:#fff7ed;border-left:4px solid var(--gold)}
+.alert.good{background:#ecfdf5;border-left:4px solid var(--green)}
+.alert-title{font-size:13px;font-weight:600;margin-bottom:3px}
+.alert.med .alert-title{color:#92400e}
+.alert.good .alert-title{color:#065f46}
+.alert-text{font-size:12px;line-height:1.5}
+.alert.med .alert-text{color:#b45309}
+.alert.good .alert-text{color:#047857}
+
+/* ═══════════════════════════════
+   SCREEN 6 — CHAT
+═══════════════════════════════ */
+#s6{background:#fafafa}
+.chat-area{flex:1;overflow-y:auto;padding:10px 16px;display:flex;flex-direction:column;gap:10px}
+.chat-area::-webkit-scrollbar{display:none}
+.bubble{max-width:82%;padding:10px 14px;border-radius:18px;font-size:13px;line-height:1.55}
+.bubble.bot{background:#f0ebff;color:var(--text);align-self:flex-start;border-bottom-left-radius:4px}
+.bubble.user{background:var(--purple);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.ai-badge{text-align:center;margin:4px 0 8px}
+.ai-badge span{display:inline-block;background:#f0ebff;border-radius:20px;padding:4px 14px;font-size:11px;color:var(--purple);font-weight:500}
+.quick-chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 16px 4px;border-top:1px solid #f0f0f0;flex-shrink:0}
+.qchip{padding:6px 12px;border-radius:14px;border:1.5px solid var(--lavender);font-size:11px;cursor:pointer;color:var(--purple);background:#faf5ff;white-space:nowrap}
+.chat-input-row{display:flex;gap:8px;padding:10px 16px 14px;flex-shrink:0}
+.chat-inp{flex:1;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:22px;font-size:13px;color:var(--text);background:#fff}
+.chat-inp:focus{outline:none;border-color:var(--purple)}
+.send{width:40px;height:40px;background:var(--purple);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.send svg{width:18px;height:18px;fill:#fff}
+
+/* BOTTOM NAV SCREEN SWITCHER */
+.screen-nav{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px;justify-content:center;max-width:380px}
+.snav{padding:7px 14px;border-radius:20px;border:1.5px solid rgba(167,139,250,.4);font-size:12px;cursor:pointer;color:var(--lavender);background:rgba(124,58,237,.15);transition:all .15s}
+.snav.on{background:var(--purple);color:#fff;border-color:var(--purple)}
+.hint{color:rgba(167,139,250,.6);font-size:11px;margin-top:10px;text-align:center}
+
+/* BUILT BY */
+.built-by{color:rgba(167,139,250,.5);font-size:11px;margin-top:14px;text-align:center}
+
+@media(max-width:400px){.device{width:300px;height:600px}}
+</style>
+</head>
+<body>
+
+<p class="site-title">🏆 Elite Her Hackathon</p>
+<p class="tagline">CycleAI — Smart Period Tracking & PCOD Risk Prediction</p>
+
+<div class="device">
+  <div class="notch"></div>
+
+  <!-- ══════════ S1: SPLASH ══════════ -->
+  <div class="screen active" id="s1">
+    <div class="logo-wrap">
+      <div class="splash-badge">🏆 Elite Her Hackathon 2025</div>
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      </div>
+      <div class="app-name">CycleAI</div>
+      <div class="app-sub">Smart period tracking &<br>early PCOD risk detection</div>
+    </div>
+    <div>
+      <button class="btn btn-primary" style="background:#fff;color:#7c3aed;font-size:16px;border-radius:18px" onclick="go('s2')">🚀 Get Started</button>
+      <button class="btn" style="background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.4);border-radius:18px;margin-top:10px" onclick="go('s3')">I already have an account</button>
+      <p style="color:rgba(255,255,255,.5);font-size:11px;text-align:center;margin-top:16px">Empowering women with AI-driven health insights</p>
+    </div>
+  </div>
+
+  <!-- ══════════ S2: LOG CYCLE ══════════ -->
+  <div class="screen" id="s2" style="background:#fff">
+    <div class="nav"><span class="nav-back" onclick="go('s1')">← Back</span><span class="nav-title">Log Your Cycle</span><span class="nav-right"></span></div>
+    <div class="content">
+      <div class="progress"><div class="pdot on"></div><div class="pdot on"></div><div class="pdot"></div></div>
+      <label class="label">Cycle start date</label>
+      <input class="field" type="date" id="dateInput" value="2026-04-03"/>
+      <label class="label">Flow intensity</label>
+      <div class="chips" id="flow">
+        <div class="chip" onclick="single(this,'flow')">💧 Light</div>
+        <div class="chip sel" onclick="single(this,'flow')">💧💧 Medium</div>
+        <div class="chip" onclick="single(this,'flow')">💧💧💧 Heavy</div>
+      </div>
+      <label class="label">Symptoms (select all that apply)</label>
+      <div class="chips" id="symp">
+        <div class="chip sel" onclick="tog(this)">Cramps</div>
+        <div class="chip" onclick="tog(this)">Bloating</div>
+        <div class="chip sel" onclick="tog(this)">Fatigue</div>
+        <div class="chip" onclick="tog(this)">Headache</div>
+        <div class="chip" onclick="tog(this)">Back pain</div>
+        <div class="chip" onclick="tog(this)">Acne</div>
+        <div class="chip" onclick="tog(this)">Mood swings</div>
+        <div class="chip" onclick="tog(this)">Nausea</div>
+      </div>
+      <label class="label">Mood today</label>
+      <div class="chips" id="mood">
+        <div class="chip" onclick="single(this,'mood')">😊 Happy</div>
+        <div class="chip sel" onclick="single(this,'mood')">😰 Anxious</div>
+        <div class="chip" onclick="single(this,'mood')">😤 Irritable</div>
+        <div class="chip" onclick="single(this,'mood')">😢 Sad</div>
+        <div class="chip" onclick="single(this,'mood')">😌 Calm</div>
+      </div>
+      <label class="label">Cycle duration (days)</label>
+      <input class="field" type="number" value="28" min="15" max="50"/>
+      <label class="label">Notes (optional)</label>
+      <input class="field" placeholder="Any additional symptoms or notes..."/>
+      <button class="btn btn-primary" onclick="go('s3')">✅ Save & View Dashboard</button>
+      <button class="btn btn-outline" onclick="go('s3')" style="margin-top:8px">Skip for now</button>
+    </div>
+  </div>
+
+  <!-- ══════════ S3: DASHBOARD ══════════ -->
+  <div class="screen" id="s3">
+    <div class="dash-header">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><div class="greeting">Good evening,</div><div class="name">Aishwariya 👋</div></div>
+        <div style="width:40px;height:40px;background:rgba(255,255,255,.25);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px">A</div>
+      </div>
+      <div class="next-card">
+        <div>
+          <div class="next-label">Next cycle in</div>
+          <div class="next-days">12 <span style="font-size:14px;font-weight:400">days</span></div>
+          <div class="next-date">📅 Est. April 25, 2026</div>
+        </div>
+        <button class="next-btn" onclick="go('s4')">View →</button>
+      </div>
+    </div>
+    <div class="content" style="padding-top:14px">
+      <div class="stat-row">
+        <div class="stat"><div class="stat-num">28</div><div class="stat-lbl">Avg Cycle</div></div>
+        <div class="stat"><div class="stat-num">5</div><div class="stat-lbl">Period Days</div></div>
+        <div class="stat" onclick="go('s5')" style="border:2px solid #fef3c7"><div class="stat-num" style="color:var(--gold)">32%</div><div class="stat-lbl">PCOD Risk</div></div>
+      </div>
+      <div class="sec">April 2026</div>
+      <div class="cal" id="cal"></div>
+      <div class="legend">
+        <div class="leg"><div class="ldot" style="background:var(--pink)"></div>Period</div>
+        <div class="leg"><div class="ldot" style="background:#ddd6fe"></div>Predicted</div>
+        <div class="leg"><div class="ldot" style="outline:2px solid var(--purple);background:transparent"></div>Today</div>
+      </div>
+      <div class="sec">Quick insights</div>
+      <div class="card card-accent" onclick="go('s6')" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+        <div><div style="font-size:13px;font-weight:600;margin-bottom:3px">🤖 AI Chatbot ready</div><div style="font-size:12px;color:var(--muted)">Ask about PCOD, symptoms, health tips</div></div>
+        <span style="color:var(--purple);font-size:18px">→</span>
+      </div>
+      <div class="card" style="border-left:4px solid var(--pink)">
+        <div style="font-size:13px;font-weight:600;margin-bottom:3px">⚠️ Cycle irregularity detected</div>
+        <div style="font-size:12px;color:var(--muted)">Last 3 cycles varied by 8+ days. Monitor closely.</div>
+      </div>
+      <div class="card" style="border-left:4px solid var(--green)">
+        <div style="font-size:13px;font-weight:600;margin-bottom:3px">💊 Reminder set</div>
+        <div style="font-size:12px;color:var(--muted)">Next reminder: April 22 — 3 days before predicted cycle</div>
+      </div>
+    </div>
+    <div class="tabs" id="tabs3">
+      <div class="tab on" onclick="go('s3')"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>Home</div>
+      <div class="tab" onclick="go('s2')"><svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>Log</div>
+      <div class="tab" onclick="go('s4')"><svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>Insights</div>
+      <div class="tab" onclick="go('s5')"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>PCOD</div>
+      <div class="tab" onclick="go('s6')"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>Chat</div>
+    </div>
+  </div>
+
+  <!-- ══════════ S4: INSIGHTS ══════════ -->
+  <div class="screen" id="s4" style="background:#fff">
+    <div class="nav"><span class="nav-back" onclick="go('s3')">← Back</span><span class="nav-title">Cycle Insights</span><span class="nav-right"></span></div>
+    <div class="content">
+      <div class="sec">Cycle length trend (last 6 months)</div>
+      <div class="chart-wrap">
+        <svg viewBox="0 0 280 90" preserveAspectRatio="none">
+          <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7c3aed" stop-opacity=".25"/><stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/></linearGradient></defs>
+          <polygon points="10,60 55,52 100,56 145,38 190,44 235,32 270,20 270,90 10,90" fill="url(#g1)"/>
+          <polyline points="10,60 55,52 100,56 145,38 190,44 235,32 270,20" fill="none" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="10" cy="60" r="4" fill="#7c3aed"/><circle cx="55" cy="52" r="4" fill="#7c3aed"/>
+          <circle cx="100" cy="56" r="4" fill="#7c3aed"/><circle cx="145" cy="38" r="4" fill="#7c3aed"/>
+          <circle cx="190" cy="44" r="4" fill="#7c3aed"/><circle cx="235" cy="32" r="4" fill="#7c3aed"/>
+          <circle cx="270" cy="20" r="5" fill="#ec4899" stroke="#fff" stroke-width="2"/>
+          <text x="6" y="78" font-size="8" fill="#9ca3af">Nov</text><text x="48" y="78" font-size="8" fill="#9ca3af">Dec</text>
+          <text x="93" y="78" font-size="8" fill="#9ca3af">Jan</text><text x="138" y="78" font-size="8" fill="#9ca3af">Feb</text>
+          <text x="183" y="78" font-size="8" fill="#9ca3af">Mar</text><text x="228" y="78" font-size="8" fill="#9ca3af">Apr</text>
+          <text x="252" y="78" font-size="8" fill="#ec4899">May*</text>
+          <text x="248" y="16" font-size="8" fill="#ec4899">Predicted</text>
+          <line x1="0" y1="90" x2="280" y2="90" stroke="#f3f4f6" stroke-width="1"/>
+        </svg>
+      </div>
+      <div style="background:#f5f3ff;border-radius:14px;padding:14px;margin-bottom:14px">
+        <div style="font-size:12px;font-weight:600;color:#5b21b6;margin-bottom:6px">🤖 ML Pattern Analysis</div>
+        <div style="font-size:12px;color:#6b7280;line-height:1.7">Your cycles have <b style="color:var(--purple)">shortened by avg. 3.2 days</b> over 6 months. This pattern combined with symptom data suggests possible hormonal shifts. PCOD risk flagged at <b style="color:var(--gold)">Moderate (32%)</b>.</div>
+      </div>
+      <div class="sec">Symptom frequency</div>
+      <div id="symp-bars"></div>
+      <div class="sec">Predictions</div>
+      <div class="card card-accent">
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">📅 Next period: April 25, 2026</div>
+        <div style="font-size:12px;color:var(--muted)">Confidence: <b style="color:var(--green)">84%</b> — LSTM model trained on your 6-month data</div>
+      </div>
+      <div class="card" style="border-left:4px solid var(--gold)">
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">🥚 Ovulation window: April 11–13</div>
+        <div style="font-size:12px;color:var(--muted)">Log mid-cycle symptoms for improved accuracy next month</div>
+      </div>
+      <div class="card" style="border-left:4px solid var(--teal)">
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">📊 Avg cycle: 28 days (↓ trending)</div>
+        <div style="font-size:12px;color:var(--muted)">Range: 24–36 days over last 6 cycles. High variability detected.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ S5: PCOD RISK ══════════ -->
+  <div class="screen" id="s5" style="background:#fff">
+    <div class="nav"><span class="nav-back" onclick="go('s3')">← Back</span><span class="nav-title">PCOD Risk Score</span><span class="nav-right"></span></div>
+    <div class="content">
+      <div class="risk-wrap">
+        <div class="risk-ring">
+          <svg viewBox="0 0 130 130">
+            <circle cx="65" cy="65" r="52" fill="none" stroke="#f3f4f6" stroke-width="12"/>
+            <circle cx="65" cy="65" r="52" fill="none" stroke="#f59e0b" stroke-width="12"
+              stroke-dasharray="327" stroke-dashoffset="222"
+              stroke-linecap="round" transform="rotate(-90 65 65)"/>
+          </svg>
+          <div class="risk-center"><div class="risk-pct">32%</div><div class="risk-word">Moderate</div></div>
+        </div>
+        <div class="risk-note">Based on 6 months of logged data + ML analysis</div>
+      </div>
+      <div class="sec">Risk indicators</div>
+      <div class="alert med">
+        <div class="alert-title">⚠️ Irregular cycle gaps</div>
+        <div class="alert-text">3 of last 6 cycles varied by 8+ days — key PCOD indicator</div>
+      </div>
+      <div class="alert med">
+        <div class="alert-title">⚠️ Acne pattern detected</div>
+        <div class="alert-text">Acne reported in 4 of last 6 cycles — may indicate androgen excess</div>
+      </div>
+      <div class="alert good">
+        <div class="alert-title">✅ Flow consistency normal</div>
+        <div class="alert-text">Flow levels are mostly consistent — positive sign</div>
+      </div>
+      <div class="alert good">
+        <div class="alert-title">✅ No skipped cycles</div>
+        <div class="alert-text">All cycles logged — no complete cycle skips detected</div>
+      </div>
+      <div class="sec">Recommendation</div>
+      <div style="background:#faf5ff;border-radius:14px;padding:14px;margin-bottom:14px;font-size:13px;color:#5b21b6;line-height:1.7;border:1.5px solid #ddd6fe">
+        Your risk is <b>Moderate</b>. We recommend consulting a gynaecologist if irregularities continue for 2+ more cycles. Monitor your symptoms closely using this app.
+      </div>
+      <button class="btn btn-primary">📄 Export Doctor Report (PDF)</button>
+      <button class="btn btn-outline" onclick="go('s6')" style="margin-top:8px">🤖 Ask AI about PCOD</button>
+    </div>
+  </div>
+
+  <!-- ══════════ S6: AI CHAT ══════════ -->
+  <div class="screen" id="s6" style="background:#fafafa">
+    <div class="nav" style="background:#fafafa"><span class="nav-back" onclick="go('s3')">← Back</span><span class="nav-title">AI Health Chat</span><span class="nav-right" style="font-size:11px;color:var(--green)">● Online</span></div>
+    <div class="chat-area" id="chatbox">
+      <div class="ai-badge"><span>🤖 AI Health Assistant — Not a substitute for medical advice</span></div>
+      <div class="bubble bot">Hi! I'm your AI health assistant 💜 I can answer questions about your cycle, PCOD symptoms, and general menstrual health. How can I help you today?</div>
+      <div class="bubble user">What is PCOD?</div>
+      <div class="bubble bot">PCOD (Polycystic Ovary Disease) is a hormonal condition where the ovaries produce excess androgens. It causes irregular periods, acne, weight gain, and small cysts on ovaries. It affects about <b>1 in 5 women</b> globally — and 70% go undiagnosed. Our app helps with early detection! 🌸</div>
+    </div>
+    <div class="quick-chips">
+      <div class="qchip" onclick="ask('Can PCOD be cured?')">Can PCOD be cured?</div>
+      <div class="qchip" onclick="ask('Foods that help PCOD?')">Foods for PCOD?</div>
+      <div class="qchip" onclick="ask('When to see a doctor?')">See a doctor?</div>
+      <div class="qchip" onclick="ask('How accurate is the prediction?')">Prediction accuracy?</div>
+    </div>
+    <div class="chat-input-row">
+      <input class="chat-inp" id="cinp" placeholder="Ask about your health..." onkeydown="if(event.key==='Enter')send()"/>
+      <button class="send" onclick="send()"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+    </div>
+  </div>
+
+</div><!-- /device -->
+
+<div class="screen-nav">
+  <button class="snav on" onclick="go('s1')">1. Welcome</button>
+  <button class="snav" onclick="go('s2')">2. Log Cycle</button>
+  <button class="snav" onclick="go('s3')">3. Dashboard</button>
+  <button class="snav" onclick="go('s4')">4. Insights</button>
+  <button class="snav" onclick="go('s5')">5. PCOD Risk</button>
+  <button class="snav" onclick="go('s6')">6. AI Chat</button>
+</div>
+<p class="hint">👆 Tap buttons inside the phone or use the shortcuts above to navigate</p>
+<p class="built-by">Built by [Your Name] & Aishwariya · Elite Her Hackathon 2025</p>
+
+<script>
+// ── Navigation ──
+const screens=['s1','s2','s3','s4','s5','s6'];
+function go(id){
+  screens.forEach(s=>{
+    const el=document.getElementById(s);
+    if(el) el.classList.toggle('active',s===id);
+  });
+  document.querySelectorAll('.snav').forEach((b,i)=>b.classList.toggle('on',screens[i]===id));
+  if(id==='s3') buildCal();
+  if(id==='s4') buildBars();
+  if(id==='s6') scrollChat();
+}
+
+// ── Chip interactions ──
+function single(el,grp){
+  document.querySelectorAll('#'+grp+' .chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function tog(el){el.classList.toggle('sel');}
+
+// ── Calendar ──
+function buildCal(){
+  const cal=document.getElementById('cal');
+  if(!cal||cal.children.length>7) return;
+  ['S','M','T','W','T','F','S'].forEach(d=>{
+    const c=document.createElement('div');c.className='cd hdr';c.textContent=d;cal.appendChild(c);
+  });
+  // April 2026 starts on Wednesday (offset 3)
+  for(let i=0;i<3;i++){const c=document.createElement('div');c.className='cd';cal.appendChild(c);}
+  for(let d=1;d<=30;d++){
+    const c=document.createElement('div');c.className='cd';c.textContent=d;
+    if(d>=3&&d<=7) c.classList.add('period');
+    else if(d===13) c.classList.add('today');
+    else if(d>=25&&d<=29) c.classList.add('predicted');
+    cal.appendChild(c);
+  }
+}
+
+// ── Symptom bars ──
+function buildBars(){
+  const cont=document.getElementById('symp-bars');
+  if(!cont||cont.children.length) return;
+  [['Cramps',92,'#ec4899'],['Fatigue',78,'#7c3aed'],['Bloating',55,'#f59e0b'],['Acne',48,'#ef4444'],['Headache',35,'#0ea5e9']].forEach(([n,p,c])=>{
+    const d=document.createElement('div');
+    d.style.marginBottom='12px';
+    d.innerHTML=`<div style="display:flex;justify-content:space-between;font-size:12px;color:#374151;margin-bottom:4px"><span>${n}</span><span style="color:#9ca3af">${p}%</span></div><div style="background:#f3f4f6;border-radius:6px;height:8px;overflow:hidden"><div style="width:0;height:100%;background:${c};border-radius:6px;transition:width 1s ease" data-w="${p}"></div></div>`;
+    cont.appendChild(d);
+  });
+  setTimeout(()=>{
+    cont.querySelectorAll('[data-w]').forEach(b=>b.style.width=b.dataset.w+'%');
+  },100);
+}
+
+// ── Chat ──
+const replies={
+  'can pcod be cured?':'PCOD cannot be fully cured, but it is very manageable! With the right lifestyle — balanced diet, regular exercise, stress management, and medical support — many women live symptom-free. Our app helps you track and manage it daily 💪',
+  'foods that help pcod?':'Great question! Foods that help PCOD:\n✅ High-fiber vegetables (broccoli, spinach)\n✅ Lean proteins (eggs, legumes)\n✅ Anti-inflammatory foods (turmeric, berries)\n✅ Low-GI carbs (oats, quinoa)\n\n❌ Avoid: sugary foods, processed snacks, excess dairy',
+  'when to see a doctor?':'See a doctor if:\n• Cycles are less than 21 or more than 35 days\n• You miss 3+ consecutive periods\n• Severe acne, unusual hair growth, or hair loss\n• Difficulty conceiving\n\nOur app can export a full health report for your doctor visit! 📄',
+  'how accurate is the prediction?':'Our ML model (LSTM + ARIMA) achieves ~84% accuracy for irregular cycle prediction — much higher than standard apps that only work for regular cycles. The more data you log, the better it gets! 📈'
+};
+function ask(q){document.getElementById('cinp').value=q;send();}
+function send(){
+  const inp=document.getElementById('cinp');
+  const q=inp.value.trim();if(!q)return;
+  const box=document.getElementById('chatbox');
+  const ub=document.createElement('div');ub.className='bubble user';ub.textContent=q;box.appendChild(ub);
+  const key=q.toLowerCase().replace('?','')+'?';
+  const ans=replies[key]||'That\'s a thoughtful question! For the most accurate health advice, please consult a gynaecologist. I can help you prepare by logging your symptoms consistently so you have a full health report ready. Would you like me to explain any specific aspect of menstrual health? 💜';
+  setTimeout(()=>{
+    const bb=document.createElement('div');bb.className='bubble bot';
+    bb.innerHTML=ans.replace(/\n/g,'<br>');box.appendChild(bb);scrollChat();
+  },600);
+  inp.value='';scrollChat();
+}
+function scrollChat(){
+  const b=document.getElementById('chatbox');
+  if(b) setTimeout(()=>b.scrollTop=b.scrollHeight,50);
+}
+
+buildCal();
+</script>
+</body>
+</html>
