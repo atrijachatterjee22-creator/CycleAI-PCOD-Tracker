@@ -78,7 +78,7 @@ User Input → Validation → ML Engine → Risk Score → Insight Generation �
 
 ## 🚀 Live Demo
 
-🔗 **[Click here to try the interactive prototype](tangerine-marzipan-07b2d9.netlify.app)**
+🔗 sparkling-custard-73173d.netlify.app
 
 ---
 
